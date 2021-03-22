@@ -9,10 +9,6 @@ import (
 	"github.com/graphql-go/graphql"
 )
 
-// define custom GraphQL ObjectType `todoType` for our Golang struct `Todo`
-// Note that
-// - the fields in our todoType maps with the json tags for the fields in our struct
-// - the field type matches the field type in our struct
 var characterType = graphql.NewObject(graphql.ObjectConfig{
 	Name: "People",
 	Fields: graphql.Fields{
@@ -31,7 +27,28 @@ var characterType = graphql.NewObject(graphql.ObjectConfig{
 	},
 })
 
-var characters []Character
+var planetType = graphql.NewObject(graphql.ObjectConfig{
+	Name: "Planet",
+	Fields: graphql.Fields{
+		"name": &graphql.Field{
+			Type: graphql.String,
+		},
+		"climate": &graphql.Field{
+			Type: graphql.String,
+		},
+		"terrain": &graphql.Field{
+			Type: graphql.Boolean,
+		},
+		"residents": &graphql.Field{
+			Type: graphql.NewList(characterType),
+		},
+	},
+})
+
+const baseUrl = "https://swapi.dev/api/"
+
+var people AllPeople
+var planets AllPlanets
 
 var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 	Name: "RootQuery",
@@ -40,24 +57,50 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 			Type:        graphql.NewList(characterType),
 			Description: "List of characters",
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				resp, err := http.Get("https://swapi.dev/api/people")
-				if err != nil {
-					return nil, err
-				}
+				if people.People == nil {
+					// load from api
+					resp, err := http.Get(baseUrl + "people")
+					if err != nil {
+						return nil, err
+					}
 
-				bytes, err := ioutil.ReadAll(resp.Body)
-				if err != nil {
-					return nil, err
-				}
+					bytes, err := ioutil.ReadAll(resp.Body)
+					if err != nil {
+						return nil, err
+					}
 
-				var people AllPeople
-
-				if err := json.Unmarshal(bytes, &people); err != nil {
-					fmt.Println("Error parsing json", err)
-					return nil, err
+					if err := json.Unmarshal(bytes, &people); err != nil {
+						fmt.Println("Error parsing json", err)
+						return nil, err
+					}
 				}
 
 				return people.People, nil
+			},
+		},
+		"planets": &graphql.Field{
+			Type:        graphql.NewList(planetType),
+			Description: "List of characters",
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				if planets.Planets == nil {
+					// load from api
+					resp, err := http.Get(baseUrl + "planets")
+					if err != nil {
+						return nil, err
+					}
+
+					bytes, err := ioutil.ReadAll(resp.Body)
+					if err != nil {
+						return nil, err
+					}
+
+					if err := json.Unmarshal(bytes, &planets); err != nil {
+						fmt.Println("Error parsing json", err)
+						return nil, err
+					}
+				}
+
+				return planets.Planets, nil
 			},
 		},
 	},

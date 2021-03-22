@@ -10,3 +10,15 @@ type Character struct {
 type AllPeople struct {
 	People []Character `json:"results"`
 }
+
+type Planet struct {
+	Name       string `json:"name"`
+	Climate    string `json:"climate"`
+	Terrain    string `json:"terrain"`
+	Population string `json:"population"`
+	Residents  []Character
+}
+
+type AllPlanets struct {
+	Planets []Planet `json:"results"`
+}
