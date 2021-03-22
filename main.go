@@ -1,11 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/graphql-go/graphql"
+	"github.com/graphql-go/handler"
 	swapi "github.com/mitchan/swapi-go-gql/schema"
 )
 
@@ -21,12 +21,15 @@ func executeQuery(query string, schema graphql.Schema) *graphql.Result {
 }
 
 func main() {
-	http.HandleFunc("/graphql", func(w http.ResponseWriter, r *http.Request) {
-		result := executeQuery(r.URL.Query().Get("query"), swapi.SwapiSchema)
-		json.NewEncoder(w).Encode(result)
+	h := handler.New(&handler.Config{
+		Schema:     &swapi.SwapiSchema,
+		Pretty:     true,
+		GraphiQL:   true,
+		Playground: true,
 	})
 
-	fmt.Println("Now server is running on port 8080")
-	fmt.Println("Test with Get      : curl -g 'http://localhost:8080/graphql?query={people{name}}'")
+	http.Handle("/graphql", h)
+
+	fmt.Println("Server is running on port 8080")
 	http.ListenAndServe(":8080", nil)
 }
