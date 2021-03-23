@@ -21,6 +21,7 @@ type Character {
 	height: String!
 	mass: String!
 	gender: String!
+	homeworld: Planet
 }
 
 type Planet {
@@ -32,6 +33,16 @@ type Planet {
 }
 `
 
+func (c Character) Homeworld() (*Planet, error) {
+	// search planet
+	for _, planet := range planets.Planets {
+		if planet.Url == c.HomeworldUrl {
+			return &planet, nil
+		}
+	}
+	return nil, nil
+}
+
 func (p Planet) Residents() (*[]Character, error) {
 	var characters []Character
 
@@ -39,11 +50,11 @@ func (p Planet) Residents() (*[]Character, error) {
 		return &characters, nil
 	}
 
-	if len(people.People) == 0 {
-		if err := loadPeople(); err != nil {
-			return nil, err
-		}
-	}
+	// if len(people.People) == 0 {
+	// 	if err := loadPeople(); err != nil {
+	// 		return nil, err
+	// 	}
+	// }
 
 	for _, url := range p.ResidentUrls {
 		// search character
@@ -67,39 +78,52 @@ func PrefetchData() {
 	for _, endpoint := range endpoints {
 		switch endpoint {
 		case "people":
-			go loadPeople()
+			go loadEndpoint(endpoint, &people)
 
 		case "planets":
-			go loadPlanets()
+			go loadEndpoint(endpoint, &planets)
 		}
 	}
 }
 
-func loadPeople() error {
-	bytes, err := utils.LoadData("people")
+func loadEndpoint(endpoint string, i interface{}) error {
+	bytes, err := utils.LoadData(endpoint)
 	if err != nil {
 		return err
 	}
 
-	if err := json.Unmarshal(bytes, &people); err != nil {
+	if err := json.Unmarshal(bytes, i); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func loadPlanets() error {
-	bytes, err := utils.LoadData("planets")
-	if err != nil {
-		return err
-	}
+// func loadPeople() error {
+// 	bytes, err := utils.LoadData("people")
+// 	if err != nil {
+// 		return err
+// 	}
 
-	if err := json.Unmarshal(bytes, &planets); err != nil {
-		return err
-	}
+// 	if err := json.Unmarshal(bytes, &people); err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
+
+// func loadPlanets() error {
+// 	bytes, err := utils.LoadData("planets")
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	if err := json.Unmarshal(bytes, &planets); err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }
 
 func (r *Resolver) People() (*[]Character, error) {
 	var s []Character
