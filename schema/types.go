@@ -5,6 +5,7 @@ type Character struct {
 	Height string `json:"height"`
 	Mass   string `json:"mass"`
 	Gender string `json:"gender"`
+	Url    string `json:"url"`
 }
 
 type AllPeople struct {
@@ -19,13 +20,8 @@ type Planet struct {
 	ResidentUrls []string `json:"residents"`
 }
 
-type characterResolver struct {
-	name string
+type AllPlanets struct {
+	Planets []Planet `json:"results"`
 }
 
-type planetResult struct {
-	result interface{}
-}
-
-// RESOLVER
 type Resolver struct{}

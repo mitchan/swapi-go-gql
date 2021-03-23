@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -14,6 +15,8 @@ var schema *graphql.Schema
 func init() {
 	opts := []graphql.SchemaOpt{graphql.UseFieldResolvers(), graphql.MaxParallelism(20)}
 	schema = graphql.MustParseSchema(swapi.Schema, &swapi.Resolver{}, opts...)
+
+	swapi.PrefetchData()
 }
 
 func main() {
@@ -23,6 +26,7 @@ func main() {
 
 	http.Handle("/query", &relay.Handler{Schema: schema})
 
+	fmt.Println("Server running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
