@@ -12,13 +12,20 @@ type AllPeople struct {
 }
 
 type Planet struct {
-	Name       string `json:"name"`
-	Climate    string `json:"climate"`
-	Terrain    string `json:"terrain"`
-	Population string `json:"population"`
-	Residents  []Character
+	Name         string   `json:"name"`
+	Climate      string   `json:"climate"`
+	Terrain      string   `json:"terrain"`
+	Population   string   `json:"population"`
+	ResidentUrls []string `json:"residents"`
 }
 
-type AllPlanets struct {
-	Planets []Planet `json:"results"`
+type characterResolver struct {
+	name string
 }
+
+type planetResult struct {
+	result interface{}
+}
+
+// RESOLVER
+type Resolver struct{}

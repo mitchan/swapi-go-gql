@@ -3,6 +3,6 @@ module github.com/mitchan/swapi-go-gql
 go 1.16
 
 require (
-	github.com/graphql-go/graphql v0.7.9
-	github.com/graphql-go/handler v0.2.3
+	github.com/graph-gophers/graphql-go v0.0.0-20210319060855-d2656e8bde15
+	github.com/stretchr/testify v1.7.0 // indirect
 )
