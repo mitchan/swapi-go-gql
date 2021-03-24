@@ -20,3 +20,20 @@ func LoadData(endpoint string) ([]byte, error) {
 
 	return bytes, nil
 }
+
+// func FindFilm(films []types.Film, slice *[]types.Film, filmUrls []string) []types.Film {
+// 	if len(filmUrls) == 0 {
+// 		return slice
+// 	}
+
+// 	for _, url := range filmUrls {
+// 		for _, film := range films.Films {
+// 			if film.Url == url {
+// 				slice = append(slice, film)
+// 				break
+// 			}
+// 		}
+// 	}
+
+// 	return slice
+// }

@@ -14,6 +14,7 @@ schema {
 type Query {
 	people: [Character!]
 	planets: [Planet!]
+	films: [Film!]
 }
 
 type Character {
@@ -22,6 +23,7 @@ type Character {
 	mass: String!
 	gender: String!
 	homeworld: Planet
+	films: [Film!]
 }
 
 type Planet {
@@ -30,31 +32,55 @@ type Planet {
 	terrain: String!
 	population: String!
 	residents: [Character!]
+	films: [Film!]
+}
+
+type Film {
+	title: String!
+	openingCrawl: String!
+	director: String!
+	releaseDate: String!
+	characters: [Character!]
+	planets: [Planet!]
 }
 `
 
-func (c Character) Homeworld() (*Planet, error) {
+func (c Character) Homeworld() *Planet {
 	// search planet
 	for _, planet := range planets.Planets {
 		if planet.Url == c.HomeworldUrl {
-			return &planet, nil
+			return &planet
 		}
 	}
-	return nil, nil
+	return nil
 }
 
-func (p Planet) Residents() (*[]Character, error) {
+func (c Character) Films() *[]Film {
+	var filmSlice []Film
+
+	if len(c.FilmUrls) == 0 {
+		return &filmSlice
+	}
+
+	for _, url := range c.FilmUrls {
+		// search character
+		for _, film := range films.Films {
+			if film.Url == url {
+				filmSlice = append(filmSlice, film)
+				break
+			}
+		}
+	}
+
+	return &filmSlice
+}
+
+func (p Planet) Residents() *[]Character {
 	var characters []Character
 
 	if len(p.ResidentUrls) == 0 {
-		return &characters, nil
+		return &characters
 	}
-
-	// if len(people.People) == 0 {
-	// 	if err := loadPeople(); err != nil {
-	// 		return nil, err
-	// 	}
-	// }
 
 	for _, url := range p.ResidentUrls {
 		// search character
@@ -66,13 +92,74 @@ func (p Planet) Residents() (*[]Character, error) {
 		}
 	}
 
-	return &characters, nil
+	return &characters
+}
+
+func (p Planet) Films() *[]Film {
+	var filmSlice []Film
+
+	if len(p.FilmUrls) == 0 {
+		return &filmSlice
+	}
+
+	for _, url := range p.FilmUrls {
+		// search character
+		for _, film := range films.Films {
+			if film.Url == url {
+				filmSlice = append(filmSlice, film)
+				break
+			}
+		}
+	}
+
+	return &filmSlice
+}
+
+func (f Film) Characters() *[]Character {
+	var characters []Character
+
+	if len(f.CharacterUrls) == 0 {
+		return &characters
+	}
+
+	for _, url := range f.CharacterUrls {
+		// search character
+		for _, character := range people.People {
+			if character.Url == url {
+				characters = append(characters, character)
+				break
+			}
+		}
+	}
+
+	return &characters
+}
+
+func (f Film) Planets() *[]Planet {
+	var planetSlice []Planet
+
+	if len(f.PlanetUrls) == 0 {
+		return &planetSlice
+	}
+
+	for _, url := range f.PlanetUrls {
+		// search planet
+		for _, planet := range planets.Planets {
+			if planet.Url == url {
+				planetSlice = append(planetSlice, planet)
+				break
+			}
+		}
+	}
+
+	return &planetSlice
 }
 
 var people AllPeople
 var planets AllPlanets
+var films AllFilms
 
-var endpoints = []string{"people", "planets"}
+var endpoints = []string{"people", "planets", "films"}
 
 func PrefetchData() {
 	for _, endpoint := range endpoints {
@@ -82,6 +169,9 @@ func PrefetchData() {
 
 		case "planets":
 			go loadEndpoint(endpoint, &planets)
+
+		case "films":
+			go loadEndpoint(endpoint, &films)
 		}
 	}
 }
@@ -139,6 +229,16 @@ func (r *Resolver) Planets() (*[]Planet, error) {
 	var slice []Planet
 
 	for _, planet := range planets.Planets {
+		slice = append(slice, planet)
+	}
+
+	return &slice, nil
+}
+
+func (r *Resolver) Films() (*[]Film, error) {
+	var slice []Film
+
+	for _, planet := range films.Films {
 		slice = append(slice, planet)
 	}
 
