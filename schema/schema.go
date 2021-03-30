@@ -1,61 +1,77 @@
 package schema
 
 import (
-	"github.com/graphql-go/graphql"
+	"encoding/json"
+
+	"github.com/mitchan/swapi-go-gql/types"
+	"github.com/mitchan/swapi-go-gql/utils"
 )
 
-type Character struct {
-	Name   string `json:"name"`
-	Height string `json:"height"`
-	Mass   string `json:"mass"`
-	Gender string `json:"gender"`
+var Schema = `
+schema {
+	query: Query
 }
 
-// define custom GraphQL ObjectType `todoType` for our Golang struct `Todo`
-// Note that
-// - the fields in our todoType maps with the json tags for the fields in our struct
-// - the field type matches the field type in our struct
-var characterType = graphql.NewObject(graphql.ObjectConfig{
-	Name: "People",
-	Fields: graphql.Fields{
-		"name": &graphql.Field{
-			Type: graphql.String,
-		},
-		"height": &graphql.Field{
-			Type: graphql.String,
-		},
-		"mass": &graphql.Field{
-			Type: graphql.Boolean,
-		},
-		"gender": &graphql.Field{
-			Type: graphql.Boolean,
-		},
-	},
-})
+type Query {
+	people: [Character!]
+	planets: [Planet!]
+	films: [Film!]
+}
 
-var characters []Character
+type Character {
+	name: String!
+	height: String!
+	mass: String!
+	gender: String!
+	homeworld: Planet
+	films: [Film!]
+}
 
-// root query
-// we just define a trivial example here, since root query is required.
-// Test with curl
-// curl -g 'http://localhost:8080/graphql?query={lastTodo{id,text,done}}'
-var rootQuery = graphql.NewObject(graphql.ObjectConfig{
-	Name: "RootQuery",
-	Fields: graphql.Fields{
-		/*
-		   curl -g 'http://localhost:8080/graphql?query={todoList{id,text,done}}'
-		*/
-		"people": &graphql.Field{
-			Type:        graphql.NewList(characterType),
-			Description: "List of characters",
-			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				return characters, nil
-			},
-		},
-	},
-})
+type Planet {
+	name: String!
+	climate: String!
+	terrain: String!
+	population: String!
+	residents: [Character!]
+	films: [Film!]
+}
 
-// define schema, with our rootQuery and rootMutation
-var SwapiSchema, _ = graphql.NewSchema(graphql.SchemaConfig{
-	Query: rootQuery,
-})
+type Film {
+	title: String!
+	openingCrawl: String!
+	director: String!
+	releaseDate: String!
+	characters: [Character!]
+	planets: [Planet!]
+}
+`
+
+var endpoints = []string{"people", "planets", "films"}
+
+func PrefetchData() {
+	for _, endpoint := range endpoints {
+		switch endpoint {
+		case "people":
+			go loadEndpoint(endpoint, &types.People)
+
+		case "planets":
+			go loadEndpoint(endpoint, &types.Planets)
+
+		case "films":
+			go loadEndpoint(endpoint, &types.Films)
+		}
+	}
+}
+
+func loadEndpoint(endpoint string, i interface{}) error {
+	bytes, err := utils.LoadData(endpoint)
+	if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(bytes, i); err != nil {
+		return err
+	}
+
+	return nil
+}
